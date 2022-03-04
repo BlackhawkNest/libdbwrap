@@ -2,8 +2,15 @@
 
 ## Introduction
 
-`libdbwrap` is a database abstraction library. The initial goal is to
-support MySQL and SQLite3.
+`libdbwrap` is a secure and unified database abstraction library. The
+initial goal is to support MySQL and SQLite3. Consumers of the API
+should not have to care what the underlying backend is once the
+backend is selected at `dbwrap` context creation time.
+
+Note that this project is under heavy and active development. Neither
+the API nor ABI should be considered stable at the moment. The
+unification API development is in progress, though not supported at
+the moment.
 
 License: 2-Clause BSD License
 
