@@ -66,20 +66,20 @@ typedef struct _dbwrap_mysql_statement {
 	MYSQL_STMT					*bms_statement;
 	MYSQL_RES					*bms_res;
 	size_t						 bms_nbinds;
-	dbwrap_mysql_statement_bind_t		*bms_last;
+	dbwrap_mysql_statement_bind_t			*bms_last;
 	LIST_HEAD(,_dbwrap_mysql_statement_bind)	 bms_binds;
 } dbwrap_mysql_statement_t;
 
 typedef struct _dbwrap_mysql_row {
 	MYSQL_BIND				*bmsb_columns;
 	unsigned long				*bmsb_colsizes;
-	LIST_ENTRY(_dbwrap_mysql_row)	 bmsb_entry;
+	LIST_ENTRY(_dbwrap_mysql_row)		 bmsb_entry;
 } dbwrap_mysql_row_t;
 
 typedef struct _dbwrap_mysql_statement_result {
 	size_t					 bmsr_ncols;
 	dbwrap_mysql_statement_t		*bmsr_statement;
-	LIST_HEAD(,_dbwrap_mysql_row)	 bmsr_rows;
+	LIST_HEAD(,_dbwrap_mysql_row)		 bmsr_rows;
 } dbwrap_mysql_statement_result_t;
 
 bool dbwrap_mysql_init(void);

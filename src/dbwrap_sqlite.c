@@ -199,6 +199,7 @@ dbwrap_sqlite_add_row(dbwrap_sqlite_query_t *query)
 
 		switch (sqlite3_column_type(query->dsq_stmt, i)) {
 		case SQLITE_INTEGER:
+			column->dsc_size = sizeof(ival);
 			column->dsc_value = calloc(1, sizeof(ival));
 			if (column->dsc_value == NULL) {
 				free(column);
@@ -250,7 +251,7 @@ dbwrap_sqlite_add_row(dbwrap_sqlite_query_t *query)
 				goto end;
 			}
 			memmove(column->dsc_value, strval, column->dsc_size);
-			column->dsc_type = DBWRAP_SQLITE_COLUMN_TEXT;
+			column->dsc_type = DBWRAP_SQLITE_COLUMN_BLOB;
 			break;
 		default:
 			free(column);

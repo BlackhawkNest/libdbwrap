@@ -45,6 +45,7 @@ typedef enum _dbwrap_sqlite_column_type {
 	DBWRAP_SQLITE_COLUMN_INT64 = 3,
 	DBWRAP_SQLITE_COLUMN_NULL = 4,
 	DBWRAP_SQLITE_COLUMN_DOUBLE = 5,
+	DBWRAP_SQLITE_COLUMN_BLOB = 6,
 } dbwrap_sqlite_column_type_t;
 
 typedef struct _dbwrap_sqlite_ctx {
