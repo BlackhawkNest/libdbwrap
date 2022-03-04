@@ -247,6 +247,89 @@ dbwrap_query_result_fetch(dbwrap_query_t *query)
 	return (NULL);
 }
 
+void
+dbwrap_query_free(dbwrap_query_t **queryp)
+{
+	dbwrap_row_t *row, *trow;
+	dbwrap_query_t *query;
+
+	if (queryp == NULL || *queryp == NULL) {
+		return;
+	}
+
+	query = *queryp;
+
+	LIST_FOREACH_SAFE(row, &(query->dq_rows), dr_entry, trow) {
+		LIST_REMOVE(row, dr_entry);
+		dbwrap_row_free(&row);
+	}
+
+	free(query);
+	*queryp = NULL;
+}
+
+void
+dbwrap_row_free(dbwrap_row_t **rowp)
+{
+	dbwrap_column_t *column, *tcolumn;
+	dbwrap_row_t *row;
+
+	if (rowp == NULL || *rowp == NULL) {
+		return;
+	}
+
+	row = *rowp;
+
+	LIST_FOREACH_SAFE(column, &(row->dr_columns), dc_entry, tcolumn) {
+		LIST_REMOVE(column, dc_entry);
+		dbwrap_column_free(&column);
+	}
+
+	free(row);
+	*rowp = NULL;
+}
+
+void
+dbwrap_column_free(dbwrap_column_t **columnp)
+{
+	dbwrap_column_t *column;
+
+	if (columnp == NULL || *columnp == NULL) {
+		return;
+	}
+
+	column = *columnp;
+
+	if (column->dc_value != NULL) {
+		explicit_bzero(column->dc_value, column->dc_size);
+		free(column->dc_value);
+	}
+
+	free(column);
+	*columnp = NULL;
+}
+
+void
+dbwrap_result_free(dbwrap_result_t **resultp)
+{
+	dbwrap_row_t *row, *trow;
+	dbwrap_result_t *result;
+
+	if (resultp == NULL || *resultp == NULL) {
+		return;
+	}
+
+	result = *resultp;
+
+	LIST_FOREACH_SAFE(row, &(result->dr_rows), dr_entry, trow) {
+		LIST_REMOVE(row, dr_entry);
+		dbwrap_row_free(&row);
+	}
+
+	free(result);
+	*resultp = NULL;
+}
+
 static dbwrap_result_t *
 _dbwrap_convert_mysql_result(dbwrap_query_t *query,
     dbwrap_mysql_statement_result_t *mresult)

@@ -107,4 +107,9 @@ bool dbwrap_query_bind_string(dbwrap_query_t *, const char *);
 bool dbwrap_query_bind_blob(dbwrap_query_t *, void *, size_t);
 bool dbwrap_query_exec(dbwrap_query_t *);
 
+void dbwrap_query_free(dbwrap_query_t **);
+void dbwrap_row_free(dbwrap_row_t **);
+void dbwrap_column_free(dbwrap_column_t **);
+void dbwrap_result_free(dbwrap_result_t **);
+
 #endif /* !_DBWRAP_H */
