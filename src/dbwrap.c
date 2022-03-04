@@ -255,7 +255,6 @@ _dbwrap_convert_mysql_result(dbwrap_query_t *query,
 	dbwrap_column_t *column;
 	dbwrap_result_t *result;
 	dbwrap_row_t *row;
-	unsigned int ival;
 	size_t i;
 
 	if (query == NULL || mresult == NULL) {
@@ -293,8 +292,6 @@ _dbwrap_convert_mysql_result(dbwrap_query_t *query,
 				memmove(column->dc_value,
 				    mrow->bmsb_columns[i].buffer,
 				    column->dc_size);
-				ival = *((unsigned int *)(mrow->bmsb_columns[i].buffer));
-				printf("ohai ival: %u\n", ival);
 				break;
 			case MYSQL_TYPE_BLOB:
 				column->dc_type = DBWRAP_COLUMN_BLOB;
