@@ -247,6 +247,107 @@ dbwrap_query_result_fetch(dbwrap_query_t *query)
 	return (NULL);
 }
 
+dbwrap_row_t *
+dbwrap_result_get_row(dbwrap_result_t *result, size_t reqid)
+{
+	dbwrap_row_t *row, *trow;
+	size_t rowid;
+
+	if (result == NULL) {
+		return (NULL);
+	}
+
+	rowid = 0;
+	LIST_FOREACH_SAFE(row, &(result->dr_rows), dr_entry, trow) {
+		if (rowid++ == reqid) {
+			return (row);
+		}
+	}
+
+	return (NULL);
+}
+
+dbwrap_column_t *
+dbwrap_row_get_column(dbwrap_row_t *row, size_t reqid)
+{
+	dbwrap_column_t *column, *tcolumn;
+	size_t colid;
+
+	if (row == NULL) {
+		return (NULL);
+	}
+
+	LIST_FOREACH_SAFE(column, &(row->dr_columns), dc_entry, tcolumn) {
+		if (colid++ == reqid) {
+			return (column);
+		}
+	}
+
+	return (NULL);
+}
+
+int
+dbwrap_column_to_int(dbwrap_column_t *column, int def)
+{
+
+	if (column == NULL) {
+		return (def);
+	}
+
+	if (column->dc_type != DBWRAP_COLUMN_INT) {
+		return (def);
+	}
+
+	return (*((int *)(column->dc_value)));
+}
+
+unsigned int
+dbwrap_column_to_uint(dbwrap_column_t *column, unsigned int def)
+{
+
+	if (column == NULL) {
+		return (def);
+	}
+
+	if (column->dc_type != DBWRAP_COLUMN_INT) {
+		return (def);
+	}
+
+	if (column->dc_value == NULL) {
+		return (def);
+	}
+
+	return (*((unsigned int *)(column->dc_value)));
+}
+
+char *
+dbwrap_column_to_string(dbwrap_column_t *column)
+{
+
+	if (column == NULL) {
+		return (NULL);
+	}
+
+	switch (column->dc_type) {
+	case DBWRAP_COLUMN_TEXT:
+	case DBWRAP_COLUMN_BLOB:
+		return ((char *)(column->dc_value));
+	default:
+		return (NULL);
+	}
+}
+
+void *
+dbwrap_column_value(dbwrap_column_t *column)
+{
+
+	if (column == NULL) {
+		return (NULL);
+	}
+
+	return (column->dc_value);
+}
+
 void
 dbwrap_query_free(dbwrap_query_t **queryp)
 {

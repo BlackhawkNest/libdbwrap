@@ -112,4 +112,12 @@ void dbwrap_row_free(dbwrap_row_t **);
 void dbwrap_column_free(dbwrap_column_t **);
 void dbwrap_result_free(dbwrap_result_t **);
 
+dbwrap_row_t *dbwrap_result_get_row(dbwrap_result_t *, size_t);
+dbwrap_column_t *dbwrap_row_get_column(dbwrap_row_t *, size_t);
+
+int dbwrap_column_to_int(dbwrap_column_t *, int);
+unsigned int dbwrap_column_to_uint(dbwrap_column_t *, unsigned int);
+char *dbwrap_column_to_string(dbwrap_column_t *);
+void *dbwrap_column_value(dbwrap_column_t *);
+
 #endif /* !_DBWRAP_H */
