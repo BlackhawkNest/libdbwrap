@@ -6,8 +6,10 @@ MAN=
 .PATH:		${.CURDIR}/include
 
 INCS+=		dbwrap_mysql.h
+INCS+=		dbwrap_sqlite.h
 
 SRCS+=		dbwrap_mysql.c
+SRCS+=		dbwrap_sqlite.c
 
 CFLAGS+=	-I${.CURDIR}/include
 CFLAGS+=	-I/usr/local/include
