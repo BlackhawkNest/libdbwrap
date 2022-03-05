@@ -324,6 +324,25 @@ dbwrap_column_to_uint(dbwrap_column_t *column, unsigned int def)
 	return (*((unsigned int *)(column->dc_value)));
 }
 
+long
+dbwrap_column_to_long(dbwrap_column_t *column, long def)
+{
+
+	if (column == NULL) {
+		return (def);
+	}
+
+	if (column->dc_type != DBWRAP_COLUMN_INT64) {
+		return (def);
+	}
+
+	if (column->dc_value == NULL) {
+		return (def);
+	}
+
+	return (*((long *)(column->dc_value)));
+}
+
 char *
 dbwrap_column_to_string(dbwrap_column_t *column)
 {
@@ -494,6 +513,19 @@ _dbwrap_convert_mysql_result(dbwrap_query_t *query,
 				    mrow->bmsb_columns[i].buffer,
 				    column->dc_size);
 				break;
+			case MYSQL_TYPE_LONGLONG:
+				column->dc_type = DBWRAP_COLUMN_INT64;
+				column->dc_size = mrow->bmsb_colsizes[i];
+				column->dc_value = calloc(1, column->dc_size);
+				if (column->dc_value == NULL) {
+					dbwrap_row_free(&row);
+					free(column);
+					goto end;
+				}
+				memmove(column->dc_value,
+				    mrow->bmsb_columns[i].buffer,
+				    column->dc_size);
+				break;
 			case MYSQL_TYPE_BLOB:
 				column->dc_type = DBWRAP_COLUMN_BLOB;
 				column->dc_size = mrow->bmsb_colsizes[i];
@@ -591,6 +623,19 @@ _dbrawp_convert_sqlite_result(dbwrap_query_t *query)
 				break;
 			case DBWRAP_SQLITE_COLUMN_INT:
 				column->dc_type = DBWRAP_COLUMN_INT;
+				column->dc_size = scolumn->dsc_size;
+				column->dc_value = calloc(1,
+				    column->dc_size);
+				if (column->dc_value == NULL) {
+					dbwrap_row_free(&row);
+					free(column);
+					goto end;
+				}
+				memmove(column->dc_value, scolumn->dsc_value,
+				    column->dc_size);
+				break;
+			case DBWRAP_SQLITE_COLUMN_INT64:
+				column->dc_type = DBWRAP_COLUMN_INT64;
 				column->dc_size = scolumn->dsc_size;
 				column->dc_value = calloc(1,
 				    column->dc_size);

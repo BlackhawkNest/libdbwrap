@@ -170,7 +170,7 @@ dbwrap_sqlite_add_row(dbwrap_sqlite_query_t *query)
 	dbwrap_sqlite_row_t *row;
 	size_t i, sz;
 	bool ret;
-	int ival;
+	long ival;
 
 	if (query == NULL) {
 		return (false);
@@ -206,8 +206,8 @@ dbwrap_sqlite_add_row(dbwrap_sqlite_query_t *query)
 				ret = false;
 				goto end;
 			}
-			column->dsc_type = DBWRAP_SQLITE_COLUMN_INT;
-			ival = sqlite3_column_int(query->dsq_stmt, i);
+			column->dsc_type = DBWRAP_SQLITE_COLUMN_INT64;
+			ival = sqlite3_column_int64(query->dsq_stmt, i);
 			memmove(column->dsc_value, &ival, sizeof(ival));
 			break;
 		case SQLITE_TEXT:
