@@ -257,6 +257,10 @@ dbwrap_result_get_row(dbwrap_result_t *result, size_t reqid)
 		return (NULL);
 	}
 
+	if (reqid > result->dr_nrows) {
+		return (NULL);
+	}
+
 	rowid = 0;
 	LIST_FOREACH_SAFE(row, &(result->dr_rows), dr_entry, trow) {
 		if (rowid++ == reqid) {
@@ -523,6 +527,7 @@ _dbwrap_convert_mysql_result(dbwrap_query_t *query,
 			row->dr_tail = column;
 		}
 
+		result->dr_nrows++;
 		LIST_INSERT_HEAD(&(result->dr_rows), row, dr_entry);
 	}
 
@@ -620,6 +625,7 @@ _dbrawp_convert_sqlite_result(dbwrap_query_t *query)
 			row->dr_tail = column;
 		}
 
+		result->dr_nrows++;
 		LIST_INSERT_HEAD(&(result->dr_rows), row, dr_entry);
 	}
 

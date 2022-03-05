@@ -90,6 +90,7 @@ typedef struct _dbwrap_query {
 
 typedef struct _dbwrap_result {
 	dbwrap_query_t			*dr_query;
+	size_t				 dr_nrows;
 	LIST_HEAD(,_dbwrap_row)		 dr_rows;
 } dbwrap_result_t;
 
