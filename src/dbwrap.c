@@ -151,6 +151,32 @@ dbwrap_query_bind_int(dbwrap_query_t *query, int *val)
 }
 
 bool
+dbwrap_query_bind_int64(dbwrap_query_t *query, long *val)
+{
+	MYSQL_BIND bval;
+
+	if (query == NULL) {
+		return (false);
+	}
+
+	memset(&bval, 0, sizeof(bval));
+	switch (query->dq_ctx->dc_dbtype) {
+	case DBWRAP_MYSQL:
+		memset(&bval, 0, sizeof(bval));
+		bval.buffer_type = MYSQL_TYPE_LONGLONG;
+		bval.buffer = val;
+		return (dbwrap_mysql_statement_bind(query->dq_qobj.dq_mysql,
+		    &bval));
+	case DBWRAP_SQLITE:
+		return (dbwrap_sqlite_bind_int64(query->dq_qobj.dq_sqlite,
+		    ++(query->dq_lastbind), *val));
+		break;
+	default:
+		return (false);
+	}
+}
+
+bool
 dbwrap_query_bind_string(dbwrap_query_t *query, const char *val)
 {
 	MYSQL_BIND bval;

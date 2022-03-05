@@ -91,6 +91,7 @@ dbwrap_sqlite_query_t *dbwrap_sqlite_query_new(dbwrap_sqlite_ctx_t *,
 void dbwrap_sqlite_query_free(dbwrap_sqlite_query_t **);
 
 bool dbwrap_sqlite_bind_int(dbwrap_sqlite_query_t *, int, int);
+bool dbwrap_sqlite_bind_int64(dbwrap_sqlite_query_t *, int, long);
 bool dbwrap_sqlite_bind_string(dbwrap_sqlite_query_t *, int, const char *);
 bool dbwrap_sqlite_bind_blob(dbwrap_sqlite_query_t *, int, void *, size_t);
 

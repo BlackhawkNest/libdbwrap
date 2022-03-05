@@ -108,6 +108,7 @@ bool dbwrap_ctx_mysql_configure(dbwrap_ctx_t *, const char *, const char *,
 dbwrap_query_t *dbwrap_query_new(dbwrap_ctx_t *, const char *, uint64_t);
 dbwrap_result_t *dbwrap_query_result_fetch(dbwrap_query_t *);
 bool dbwrap_query_bind_int(dbwrap_query_t *, int *);
+bool dbwrap_query_bind_int64(dbwrap_query_t *, long *);
 bool dbwrap_query_bind_string(dbwrap_query_t *, const char *);
 bool dbwrap_query_bind_blob(dbwrap_query_t *, void *, size_t);
 bool dbwrap_query_exec(dbwrap_query_t *);

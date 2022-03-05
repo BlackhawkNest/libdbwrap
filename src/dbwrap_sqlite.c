@@ -360,6 +360,18 @@ dbwrap_sqlite_bind_int(dbwrap_sqlite_query_t *query, int paramno, int val)
 }
 
 bool
+dbwrap_sqlite_bind_int64(dbwrap_sqlite_query_t *query, int paramno, long val)
+{
+
+	if (query == NULL) {
+		return (false);
+	}
+
+	return (sqlite3_bind_int64(query->dsq_stmt, paramno, val) ==
+	    SQLITE_OK);
+}
+
+bool
 dbwrap_sqlite_bind_string(dbwrap_sqlite_query_t *query, int paramno,
     const char *val)
 {
