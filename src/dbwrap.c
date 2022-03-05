@@ -476,6 +476,7 @@ _dbwrap_convert_mysql_result(dbwrap_query_t *query,
 		for (i = 0; i < mresult->bmsr_ncols; i++) {
 			column = calloc(1, sizeof(*column));
 			if (column == NULL) {
+				dbwrap_row_free(&row);
 				goto end;
 			}
 
@@ -485,6 +486,7 @@ _dbwrap_convert_mysql_result(dbwrap_query_t *query,
 				column->dc_size = mrow->bmsb_colsizes[i];
 				column->dc_value = calloc(1, column->dc_size);
 				if (column->dc_value == NULL) {
+					dbwrap_row_free(&row);
 					free(column);
 					goto end;
 				}
@@ -497,6 +499,7 @@ _dbwrap_convert_mysql_result(dbwrap_query_t *query,
 				column->dc_size = mrow->bmsb_colsizes[i];
 				column->dc_value = calloc(1, column->dc_size+1);
 				if (column->dc_value == NULL) {
+					dbwrap_row_free(&row);
 					free(column);
 					goto end;
 				}
@@ -509,6 +512,7 @@ _dbwrap_convert_mysql_result(dbwrap_query_t *query,
 				column->dc_size = mrow->bmsb_colsizes[i];
 				column->dc_value = calloc(1, column->dc_size);
 				if (column->dc_value == NULL) {
+					dbwrap_row_free(&row);
 					free(column);
 					goto end;
 				}
@@ -567,7 +571,7 @@ _dbrawp_convert_sqlite_result(dbwrap_query_t *query)
 		    tscolumn) {
 			column = calloc(1, sizeof(*column));
 			if (column == NULL) {
-				/* TODO: Clean up entire row */
+				dbwrap_row_free(&row);
 				goto end;
 			}
 
@@ -578,7 +582,8 @@ _dbrawp_convert_sqlite_result(dbwrap_query_t *query)
 				column->dc_value = calloc(1,
 				    column->dc_size + 1);
 				if (column->dc_value == NULL) {
-					/* TODO: Clean up entire row */
+					dbwrap_row_free(&row);
+					free(column);
 					goto end;
 				}
 				memmove(column->dc_value, scolumn->dsc_value,
@@ -590,7 +595,8 @@ _dbrawp_convert_sqlite_result(dbwrap_query_t *query)
 				column->dc_value = calloc(1,
 				    column->dc_size);
 				if (column->dc_value == NULL) {
-					/* TODO: Clean up entire row */
+					dbwrap_row_free(&row);
+					free(column);
 					goto end;
 				}
 				memmove(column->dc_value, scolumn->dsc_value,
@@ -602,14 +608,15 @@ _dbrawp_convert_sqlite_result(dbwrap_query_t *query)
 				column->dc_value = calloc(1,
 				    column->dc_size);
 				if (column->dc_value == NULL) {
-					/* TODO: Clean up entire row */
+					dbwrap_row_free(&row);
+					free(column);
 					goto end;
 				}
 				memmove(column->dc_value, scolumn->dsc_value,
 				    column->dc_size);
 				break;
 			default:
-				/* TODO: Clean up entire row */
+				dbwrap_row_free(&row);
 				free(column);
 				goto end;
 			}
