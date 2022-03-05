@@ -365,6 +365,17 @@ dbwrap_query_free(dbwrap_query_t **queryp)
 		dbwrap_row_free(&row);
 	}
 
+	switch (query->dq_ctx->dc_dbtype) {
+	case DBWRAP_MYSQL:
+		dbwrap_mysql_statement_free(&(query->dq_qobj.dq_mysql));
+		break;
+	case DBWRAP_SQLITE:
+		dbwrap_sqlite_query_free(&(query->dq_qobj.dq_sqlite));
+		break;
+	default:
+		break;
+	}
+
 	free(query);
 	*queryp = NULL;
 }
@@ -516,6 +527,7 @@ _dbwrap_convert_mysql_result(dbwrap_query_t *query,
 	}
 
 end:
+	dbwrap_mysql_statement_result_free(&mresult);
 	return (result);
 }
 
