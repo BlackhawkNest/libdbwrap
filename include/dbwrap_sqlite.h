@@ -79,6 +79,10 @@ typedef struct _dbwrap_sqlite_query {
 	LIST_HEAD(,_dbwrap_sqlite_row)	 dsq_rows;
 } dbwrap_sqlite_query_t;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 dbwrap_sqlite_ctx_t *dbwrap_sqlite_ctx_new(const char *, uint64_t);
 void dbwrap_sqlite_ctx_free(dbwrap_sqlite_ctx_t **);
 
@@ -95,5 +99,9 @@ bool dbwrap_sqlite_add_row(dbwrap_sqlite_query_t *);
 void dbwrap_sqlite_row_free(dbwrap_sqlite_row_t **);
 
 void dbwrap_sqlite_column_free(dbwrap_sqlite_column_t **);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* !_DBWRAP_SQLITE_H */

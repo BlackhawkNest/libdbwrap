@@ -94,6 +94,10 @@ typedef struct _dbwrap_result {
 	LIST_HEAD(,_dbwrap_row)		 dr_rows;
 } dbwrap_result_t;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 dbwrap_ctx_t *dbwrap_ctx_new(dbwrap_dbtype_t, uint64_t);
 bool dbwrap_ctx_sqlite_configure(dbwrap_ctx_t *, const char *, uint64_t);
 
@@ -120,5 +124,9 @@ int dbwrap_column_to_int(dbwrap_column_t *, int);
 unsigned int dbwrap_column_to_uint(dbwrap_column_t *, unsigned int);
 char *dbwrap_column_to_string(dbwrap_column_t *);
 void *dbwrap_column_value(dbwrap_column_t *);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* !_DBWRAP_H */

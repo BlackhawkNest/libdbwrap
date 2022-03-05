@@ -82,6 +82,10 @@ typedef struct _dbwrap_mysql_statement_result {
 	LIST_HEAD(,_dbwrap_mysql_row)		 bmsr_rows;
 } dbwrap_mysql_statement_result_t;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 bool dbwrap_mysql_init(void);
 bool dbwrap_mysql_thread_init(void);
 bool dbwrap_mysql_thread_cleanup(void);
@@ -109,5 +113,9 @@ dbwrap_mysql_statement_result_t *dbwrap_mysql_fetch_results(
     dbwrap_mysql_statement_t *);
 void dbwrap_mysql_statement_result_free(
     dbwrap_mysql_statement_result_t **);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* !_DBWRAP_MYSQL_H */
