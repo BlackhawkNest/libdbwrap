@@ -425,6 +425,8 @@ dbwrap_query_free(dbwrap_query_t **queryp)
 		break;
 	}
 
+	memset(query, 0, sizeof(*query));
+
 	free(query);
 	*queryp = NULL;
 }
@@ -446,6 +448,8 @@ dbwrap_row_free(dbwrap_row_t **rowp)
 		dbwrap_column_free(&column);
 	}
 
+	memset(row, 0, sizeof(*row));
+
 	free(row);
 	*rowp = NULL;
 }
@@ -465,6 +469,8 @@ dbwrap_column_free(dbwrap_column_t **columnp)
 		explicit_bzero(column->dc_value, column->dc_size);
 		free(column->dc_value);
 	}
+
+	memset(column, 0, sizeof(*column));
 
 	free(column);
 	*columnp = NULL;
@@ -486,6 +492,8 @@ dbwrap_result_free(dbwrap_result_t **resultp)
 		LIST_REMOVE(row, dr_entry);
 		dbwrap_row_free(&row);
 	}
+
+	memset(result, 0, sizeof(*result));
 
 	free(result);
 	*resultp = NULL;
