@@ -201,16 +201,11 @@ dbwrap_mysql_connect(dbwrap_mysql_ctx_t *ctx)
 
 	set = true;
 	if (mysql_options(ctx->bmc_mysql, MYSQL_OPT_RECONNECT, &set)) {
-		fprintf(stderr, "[-] mysql_options: %s\n",
-		    mysql_error(ctx->bmc_mysql));
 		return (false);
 	}
 
 	set = false;
 	if (mysql_options(ctx->bmc_mysql, MYSQL_REPORT_DATA_TRUNCATION, &set)) {
-		fprintf(stderr,
-		    "[-] mysql_options(mysql_data_truncation): %s\n",
-		    mysql_error(ctx->bmc_mysql));
 		return (false);
 	}
 
@@ -231,8 +226,6 @@ dbwrap_mysql_connect(dbwrap_mysql_ctx_t *ctx)
 		if (!mysql_real_connect(ctx->bmc_mysql, ctx->bmc_host,
 		    ctx->bmc_username, ctx->bmc_password, ctx->bmc_database,
 		    ctx->bmc_port, NULL, flags)) {
-			fprintf(stderr, "[-] Could not connect: %s\n",
-			    mysql_error(ctx->bmc_mysql));
 			return (false);
 		}
 	}
@@ -356,8 +349,6 @@ dbwrap_mysql_statement_exec(dbwrap_mysql_statement_t *stmt)
 
 	if (mysql_stmt_prepare(stmt->bms_statement, stmt->bms_query,
 	    strlen(stmt->bms_query))) {
-		fprintf(stderr, "[-] mysql_stmt_prepare: %s\n",
-		    mysql_error(stmt->bms_ctx->bmc_mysql));
 		res = false;
 		goto end;
 	}
@@ -386,8 +377,6 @@ dbwrap_mysql_statement_exec(dbwrap_mysql_statement_t *stmt)
 	}
 
 	if (msbind && mysql_stmt_bind_param(stmt->bms_statement, msbind)) {
-		fprintf(stderr, "[-] mysql_stmt_bind_param: %s\n",
-		    mysql_error(stmt->bms_ctx->bmc_mysql));
 		res = false;
 		goto end;
 	}
@@ -400,15 +389,11 @@ dbwrap_mysql_statement_exec(dbwrap_mysql_statement_t *stmt)
 	locked = true;
 
 	if (mysql_stmt_execute(stmt->bms_statement)) {
-		fprintf(stderr, "[-] mysql_stmt_execute: %s\n",
-		    mysql_error(stmt->bms_ctx->bmc_mysql));
 		res = false;
 		goto end;
 	}
 
 	if (mysql_stmt_store_result(stmt->bms_statement)) {
-		fprintf(stderr, "[-] mysql_stmt_store_result: %s\n",
-		    mysql_error(stmt->bms_ctx->bmc_mysql));
 		res = false;
 		goto end;
 	}
@@ -517,10 +502,6 @@ dbwrap_mysql_fetch_results(dbwrap_mysql_statement_t *stmt)
 
 		if (!mysql_stmt_bind_result(stmt->bms_statement,
 		    row->bmsb_columns) && mysql_stmt_errno(stmt->bms_statement)) {
-			fprintf(stderr, "[-] mysql_stmt_bind_result: %s\n",
-			    mysql_stmt_error(stmt->bms_statement));
-			fprintf(stderr, "    - errno: %d\n",
-			    mysql_stmt_errno(stmt->bms_statement));
 			free(row->bmsb_colsizes);
 			free(row);
 			return (res);
@@ -528,15 +509,12 @@ dbwrap_mysql_fetch_results(dbwrap_mysql_statement_t *stmt)
 
 		status = mysql_stmt_fetch(stmt->bms_statement);
 		if (status == 1) {
-			fprintf(stderr, "[-] mysql_stmt_fetch length: %s\n",
-			    mysql_error(stmt->bms_ctx->bmc_mysql));
 			free(row->bmsb_colsizes);
 			free(row);
 			return (res);
 		}
 
 		if (status == MYSQL_NO_DATA) {
-			fprintf(stderr, "[-] No data\n");
 			free(row->bmsb_colsizes);
 			free(row);
 			break;
@@ -559,17 +537,12 @@ dbwrap_mysql_fetch_results(dbwrap_mysql_statement_t *stmt)
 			row->bmsb_columns[i].buffer_type = stmt->bms_res->fields[i].type;
 			if (mysql_stmt_fetch_column(stmt->bms_statement,
 			    row->bmsb_columns + i, i, 0)) {
-				fprintf(stderr,
-				    "[-] mysql_stmt_fetch_column[%zu]: %s\n",
-				    i, mysql_error(stmt->bms_ctx->bmc_mysql));
 				free(row->bmsb_columns[i].buffer);
 				break;
 			}
 		}
 
 		if (i < res->bmsr_ncols) {
-			fprintf(stderr,
-			    "[-] Could not get all columnal data. i: %zu\n", i);
 			free(row->bmsb_colsizes);
 			free(row);
 			return (res);
