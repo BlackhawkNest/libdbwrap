@@ -177,6 +177,32 @@ dbwrap_query_bind_int64(dbwrap_query_t *query, long *val)
 }
 
 bool
+dbwrap_query_bind_uint64(dbwrap_query_t *query, unsigned long *val)
+{
+	MYSQL_BIND bval;
+
+	if (query == NULL) {
+		return (false);
+	}
+
+	memset(&bval, 0, sizeof(bval));
+	switch (query->dq_ctx->dc_dbtype) {
+	case DBWRAP_MYSQL:
+		memset(&bval, 0, sizeof(bval));
+		bval.buffer_type = MYSQL_TYPE_LONGLONG;
+		bval.buffer = val;
+		return (dbwrap_mysql_statement_bind(query->dq_qobj.dq_mysql,
+		    &bval));
+	case DBWRAP_SQLITE:
+		return (dbwrap_sqlite_bind_int64(query->dq_qobj.dq_sqlite,
+		    ++(query->dq_lastbind), *val));
+		break;
+	default:
+		return (false);
+	}
+}
+
+bool
 dbwrap_query_bind_string(dbwrap_query_t *query, const char *val)
 {
 	MYSQL_BIND bval;
@@ -307,6 +333,7 @@ dbwrap_row_get_column(dbwrap_row_t *row, size_t reqid)
 		return (NULL);
 	}
 
+	colid = 0;
 	LIST_FOREACH_SAFE(column, &(row->dr_columns), dc_entry, tcolumn) {
 		if (colid++ == reqid) {
 			return (column);
@@ -367,6 +394,25 @@ dbwrap_column_to_long(dbwrap_column_t *column, long def)
 	}
 
 	return (*((long *)(column->dc_value)));
+}
+
+unsigned long
+dbwrap_column_to_ulong(dbwrap_column_t *column, unsigned long def)
+{
+
+	if (column == NULL) {
+		return (def);
+	}
+
+	if (column->dc_type != DBWRAP_COLUMN_INT64) {
+		return (def);
+	}
+
+	if (column->dc_value == NULL) {
+		return (def);
+	}
+
+	return (*((unsigned long *)(column->dc_value)));
 }
 
 char *

@@ -109,6 +109,7 @@ dbwrap_query_t *dbwrap_query_new(dbwrap_ctx_t *, const char *, uint64_t);
 dbwrap_result_t *dbwrap_query_result_fetch(dbwrap_query_t *);
 bool dbwrap_query_bind_int(dbwrap_query_t *, int *);
 bool dbwrap_query_bind_int64(dbwrap_query_t *, long *);
+bool dbwrap_query_bind_uint64(dbwrap_query_t *, unsigned long *);
 bool dbwrap_query_bind_string(dbwrap_query_t *, const char *);
 bool dbwrap_query_bind_blob(dbwrap_query_t *, void *, size_t);
 bool dbwrap_query_exec(dbwrap_query_t *);
@@ -123,6 +124,8 @@ dbwrap_column_t *dbwrap_row_get_column(dbwrap_row_t *, size_t);
 
 int dbwrap_column_to_int(dbwrap_column_t *, int);
 unsigned int dbwrap_column_to_uint(dbwrap_column_t *, unsigned int);
+long dbwrap_column_to_long(dbwrap_column_t *, long);
+unsigned long dbwrap_column_to_ulong(dbwrap_column_t *, unsigned long);
 char *dbwrap_column_to_string(dbwrap_column_t *);
 void *dbwrap_column_value(dbwrap_column_t *);
 
