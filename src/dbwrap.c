@@ -211,7 +211,6 @@ dbwrap_query_bind_string(dbwrap_query_t *query, const char *val)
 		return (false);
 	}
 
-	memset(&bval, 0, sizeof(bval));
 	switch (query->dq_ctx->dc_dbtype) {
 	case DBWRAP_MYSQL:
 		memset(&bval, 0, sizeof(bval));
@@ -223,7 +222,6 @@ dbwrap_query_bind_string(dbwrap_query_t *query, const char *val)
 	case DBWRAP_SQLITE:
 		return (dbwrap_sqlite_bind_string(query->dq_qobj.dq_sqlite,
 		    ++(query->dq_lastbind), val));
-		break;
 	default:
 		return (false);
 	}
