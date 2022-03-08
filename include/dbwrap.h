@@ -39,6 +39,9 @@
 
 #define DBWRAP_QUERY_ERROR	0x1
 
+struct _dbwrap_row;
+struct _dbwrap_query;
+
 typedef enum _dbwrap_dbtype {
 	DBWRAP_UNKNOWN = 0,
 	DBWRAP_MYSQL = 1,
@@ -79,11 +82,13 @@ typedef struct _dbwrap_column {
 	dbwrap_column_type_t		 dc_type;
 	void				*dc_value;
 	size_t				 dc_size;
+	struct _dbwrap_row		*dc_row;
 	LIST_ENTRY(_dbwrap_column)	 dc_entry;
 } dbwrap_column_t;
 
 typedef struct _dbwrap_row {
 	dbwrap_column_t			*dr_tail;
+	struct _dbwrap_query		*dr_query;
 	LIST_HEAD(,_dbwrap_column)	 dr_columns;
 	LIST_ENTRY(_dbwrap_row)		 dr_entry;
 } dbwrap_row_t;

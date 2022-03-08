@@ -797,6 +797,7 @@ _dbwrap_convert_mysql_result(dbwrap_query_t *query,
 			goto end;
 		}
 
+		row->dr_query = query;
 		LIST_INIT(&(row->dr_columns));
 
 		for (i = 0; i < mresult->bmsr_ncols; i++) {
@@ -810,6 +811,7 @@ _dbwrap_convert_mysql_result(dbwrap_query_t *query,
 				goto end;
 			}
 
+			column->dc_row = row;
 			switch (mresult->bmsr_statement->bms_res->fields[i].type) {
 			case MYSQL_TYPE_LONG:
 				column->dc_type = DBWRAP_COLUMN_INT;
@@ -926,6 +928,7 @@ _dbrawp_convert_sqlite_result(dbwrap_query_t *query)
 			goto end;
 		}
 
+		row->dr_query = query;
 		LIST_INIT(&(row->dr_columns));
 
 		LIST_FOREACH_SAFE(scolumn, &(srow->dsr_columns), dsc_entry,
@@ -940,6 +943,7 @@ _dbrawp_convert_sqlite_result(dbwrap_query_t *query)
 				goto end;
 			}
 
+			column->dc_row = row;
 			switch (scolumn->dsc_type) {
 			case DBWRAP_SQLITE_COLUMN_TEXT:
 				column->dc_type = DBWRAP_COLUMN_TEXT;
