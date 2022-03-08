@@ -37,16 +37,28 @@
 
 #define DBWRAP_VERSION 0
 
+#define DBWRAP_QUERY_ERROR	0x1
+
 typedef enum _dbwrap_dbtype {
-	DBWRAP_UNKNOWN=0,
-	DBWRAP_MYSQL=1,
-	DBWRAP_SQLITE=2,
+	DBWRAP_UNKNOWN = 0,
+	DBWRAP_MYSQL = 1,
+	DBWRAP_SQLITE = 2,
 } dbwrap_dbtype_t;
+
+typedef enum _dbwrap_errorcode {
+	DBWRAP_ERROR_NONE = 0,
+	DBWRAP_ERROR_UNKNOWN = 1,
+	DBWRAP_ERROR_BACKEND = 2,
+	DBWRAP_ERROR_WRAP = 3,
+	DBWRAP_ERROR_TYPE = 4,
+	DBWRAP_ERROR_ALLOC = 5,
+} dbwrap_errorcode_t;
 
 typedef struct _dbwrap_ctx {
 	uint64_t			 dc_version;
 	uint64_t			 dc_flags;
 	dbwrap_dbtype_t			 dc_dbtype;
+	dbwrap_errorcode_t		 dc_errorcode;
 	union {
 		dbwrap_sqlite_ctx_t	*dc_sqlite;
 		dbwrap_mysql_ctx_t	*dc_mysql;
@@ -78,6 +90,7 @@ typedef struct _dbwrap_row {
 
 typedef struct _dbwrap_query {
 	uint64_t				 dq_flags;
+	dbwrap_errorcode_t			 dq_errorcode;
 	size_t					 dq_lastbind;
 	char					*dq_query;
 	dbwrap_ctx_t				*dq_ctx;
@@ -113,6 +126,18 @@ bool dbwrap_query_bind_uint64(dbwrap_query_t *, unsigned long *);
 bool dbwrap_query_bind_string(dbwrap_query_t *, const char *);
 bool dbwrap_query_bind_blob(dbwrap_query_t *, void *, size_t);
 bool dbwrap_query_exec(dbwrap_query_t *);
+
+uint64_t dbwrap_query_get_flags(dbwrap_query_t *);
+uint64_t dbwrap_query_set_flag(dbwrap_query_t *, uint64_t);
+uint64_t dbwrap_query_set_flags(dbwrap_query_t *, uint64_t);
+bool dbwrap_query_is_flag_set(dbwrap_query_t *, uint64_t);
+dbwrap_errorcode_t dbwrap_query_errorcode(dbwrap_query_t *);
+void dbwrap_query_set_errorcode(dbwrap_query_t *, dbwrap_errorcode_t);
+void dbwrap_query_clear_errorcode(dbwrap_query_t *);
+void dbwrap_query_clear_error(dbwrap_query_t *);
+
+const char *dbwrap_query_get_error_string(dbwrap_query_t *);
+unsigned int dbwrap_query_get_errno(dbwrap_query_t *);
 
 void dbwrap_query_free(dbwrap_query_t **);
 void dbwrap_row_free(dbwrap_row_t **);
