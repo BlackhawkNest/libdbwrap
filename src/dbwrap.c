@@ -284,7 +284,7 @@ dbwrap_query_bind_int(dbwrap_query_t *query, int *val)
 	MYSQL_BIND bval;
 	bool res;
 
-	if (query == NULL) {
+	if (query == NULL || val == NULL) {
 		return (false);
 	}
 
@@ -324,7 +324,7 @@ dbwrap_query_bind_int64(dbwrap_query_t *query, long *val)
 	MYSQL_BIND bval;
 	bool res;
 
-	if (query == NULL) {
+	if (query == NULL || val == NULL) {
 		return (false);
 	}
 
@@ -364,7 +364,7 @@ dbwrap_query_bind_uint64(dbwrap_query_t *query, unsigned long *val)
 	MYSQL_BIND bval;
 	bool res;
 
-	if (query == NULL) {
+	if (query == NULL || val == NULL) {
 		return (false);
 	}
 
@@ -404,7 +404,7 @@ dbwrap_query_bind_string(dbwrap_query_t *query, const char *val)
 	MYSQL_BIND bval;
 	bool res;
 
-	if (query == NULL) {
+	if (query == NULL || val == NULL) {
 		return (false);
 	}
 
@@ -444,7 +444,7 @@ dbwrap_query_bind_blob(dbwrap_query_t *query, void *val, size_t sz)
 	MYSQL_BIND bval;
 	bool res;
 
-	if (query == NULL) {
+	if (query == NULL || val == NULL) {
 		return (false);
 	}
 
