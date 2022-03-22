@@ -37,6 +37,7 @@ more data types will be added in the future.
 For MySQL:
 
 1. `MYSQL_TYPE_LONG` -> `DBWRAP_COLUMN_INT`
+1. `MYSQL_TYPE_LONGLONG` -> `DBWRAP_COLUMN_INT64`
 1. `MYSQL_TYPE_BLOB` -> `DBWRAP_COLUMN_BLOB`
 
 For SQLite3:
@@ -47,3 +48,7 @@ For SQLite3:
 
 String/textual types (`DBWRAP_COLUMN_TEXT`) are guaranteed to be NUL
 terminated.
+
+Unknown backend database types are handled on a "best effort" basis.
+In such cases, the dbwrap column type is set to
+`DBWRAP_COLUMN_UNKNOWN`.
