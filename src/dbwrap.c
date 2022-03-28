@@ -53,6 +53,154 @@ dbwrap_ctx_new(dbwrap_dbtype_t dbtype, uint64_t flags)
 	return (ctx);
 }
 
+void
+dbwrap_ctx_free(dbwrap_ctx_t **ctxp)
+{
+	dbwrap_ctx_t *ctx;
+
+	if (ctxp == NULL || *ctxp == NULL) {
+		return;
+	}
+
+	ctx = *ctxp;
+
+	switch (ctx->dc_dbtype) {
+	case DBWRAP_MYSQL:
+		dbwrap_mysql_ctx_destroy(&(ctx->dc_dbctx.dc_mysql));
+		break;
+	case DBWRAP_SQLITE:
+		dbwrap_sqlite_ctx_free(&(ctx->dc_dbctx.dc_sqlite));
+		break;
+	default:
+		break;
+	}
+
+	if (ctx->dc_pool != NULL) {
+		dbwrap_pool_remove_connection(ctx->dc_pool, ctx);
+	}
+
+	*ctxp = NULL;
+	free(ctx);
+}
+
+dbwrap_pool_t *
+dbwrap_pool_new(uint64_t flags)
+{
+	dbwrap_pool_t *pool;
+
+	pool = calloc(1, sizeof(*pool));
+	if (pool == NULL) {
+		return (NULL);
+	}
+
+	if (pthread_mutex_init(&(pool->dp_mtx), NULL)) {
+		free(pool);
+		return (NULL);
+	}
+
+	pool->dp_version = DBWRAP_VERSION;
+	pool->dp_flags = flags;
+	LIST_INIT(&(pool->dp_conns));
+
+	return (pool);
+}
+
+void
+dbwrap_pool_free(dbwrap_pool_t **poolp, bool free_conn)
+{
+	dbwrap_ctx_t *ctx, *tctx;
+	dbwrap_pool_t *pool;
+
+	if (poolp == NULL || *poolp == NULL) {
+		return;
+	}
+
+	pool = *poolp;
+
+	LIST_FOREACH_SAFE(ctx, &(pool->dp_conns), dc_entry, tctx) {
+		dbwrap_pool_remove_connection(pool, ctx);
+		if (free_conn) {
+			dbwrap_ctx_free(&ctx);
+		}
+	}
+
+	pthread_mutex_destroy(&(pool->dp_mtx));
+	free(pool);
+	*poolp = NULL;
+}
+
+bool
+dbwrap_pool_add_connection(dbwrap_pool_t *pool, dbwrap_ctx_t *ctx)
+{
+
+	if (pool == NULL || ctx == NULL) {
+		return (false);
+	}
+
+	/* A given connection can be a member of only a single pool */
+	if (ctx->dc_pool != NULL) {
+		return (false);
+	}
+
+	if (pthread_mutex_lock(&(pool->dp_mtx))) {
+		return (false);
+	}
+
+	LIST_INSERT_HEAD(&(pool->dp_conns), ctx, dc_entry);
+	pool->dp_nconns++;
+	ctx->dc_pool = pool;
+
+	pthread_mutex_unlock(&(pool->dp_mtx));
+
+	return (true);
+}
+
+void
+dbwrap_pool_remove_connection(dbwrap_pool_t *pool, dbwrap_ctx_t *ctx)
+{
+
+	if (pool == NULL || ctx == NULL) {
+		return;
+	}
+
+	if (ctx->dc_pool != pool) {
+		return;
+	}
+
+	LIST_REMOVE(ctx, dc_entry);
+	ctx->dc_pool = NULL;
+}
+
+dbwrap_ctx_t *
+dbwrap_pool_get_connection(dbwrap_pool_t *pool)
+{
+	dbwrap_ctx_t *ctx, *tctx;
+	uint64_t i;
+
+	if (pool == NULL) {
+		return (NULL);
+	}
+
+	if (pool->dp_nconns == 0) {
+		return (NULL);
+	}
+
+	if (pthread_mutex_lock(&(pool->dp_mtx))) {
+		return (NULL);
+	}
+
+	i = 0;
+	LIST_FOREACH_SAFE(ctx, &(pool->dp_conns), dc_entry, tctx) {
+		if (++i == (pool->dp_lastconn % pool->dp_nconns)) {
+			break;
+		}
+	}
+
+	pool->dp_lastconn++;
+	pthread_mutex_unlock(&(pool->dp_mtx));
+	return (ctx);
+}
+
 bool
 dbwrap_ctx_sqlite_configure(dbwrap_ctx_t *ctx, const char *path,
     uint64_t flags)

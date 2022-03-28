@@ -39,6 +39,7 @@
 
 #define DBWRAP_QUERY_ERROR	0x1
 
+struct _dbwrap_pool;
 struct _dbwrap_row;
 struct _dbwrap_query;
 
@@ -62,11 +63,22 @@ typedef struct _dbwrap_ctx {
 	uint64_t			 dc_flags;
 	dbwrap_dbtype_t			 dc_dbtype;
 	dbwrap_errorcode_t		 dc_errorcode;
+	struct _dbwrap_pool		*dc_pool;
 	union {
 		dbwrap_sqlite_ctx_t	*dc_sqlite;
 		dbwrap_mysql_ctx_t	*dc_mysql;
 	}				 dc_dbctx;
+	LIST_ENTRY(_dbwrap_ctx)		 dc_entry;
 } dbwrap_ctx_t;
+
+typedef struct _dbwrap_pool {
+	uint64_t			 dp_version;
+	uint64_t			 dp_flags;
+	uint64_t			 dp_nconns;
+	uint64_t			 dp_lastconn;
+	pthread_mutex_t			 dp_mtx;
+	LIST_HEAD(,_dbwrap_ctx)		 dp_conns;
+} dbwrap_pool_t;
 
 typedef enum _dbwrap_column_type {
 	DBWRAP_COLUMN_UNKNOWN = 0,
@@ -117,6 +129,13 @@ extern "C" {
 #endif
 
 dbwrap_ctx_t *dbwrap_ctx_new(dbwrap_dbtype_t, uint64_t);
+void dbwrap_ctx_free(dbwrap_ctx_t **);
+
+dbwrap_pool_t *dbwrap_pool_new(uint64_t);
+void dbwrap_pool_free(dbwrap_pool_t **, bool);
+dbwrap_ctx_t *dbwrap_pool_get_connection(dbwrap_pool_t *);
+void dbwrap_pool_remove_connection(dbwrap_pool_t *, dbwrap_ctx_t *);
+
 bool dbwrap_ctx_sqlite_configure(dbwrap_ctx_t *, const char *, uint64_t);
 
 /* ctx, host, username, password, database, port, flags */
