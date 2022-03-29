@@ -134,6 +134,7 @@ void dbwrap_ctx_free(dbwrap_ctx_t **);
 dbwrap_pool_t *dbwrap_pool_new(uint64_t);
 void dbwrap_pool_free(dbwrap_pool_t **, bool);
 dbwrap_ctx_t *dbwrap_pool_get_connection(dbwrap_pool_t *);
+bool dbwrap_pool_add_connection(dbwrap_pool_t *, dbwrap_ctx_t *);
 void dbwrap_pool_remove_connection(dbwrap_pool_t *, dbwrap_ctx_t *);
 
 bool dbwrap_ctx_sqlite_configure(dbwrap_ctx_t *, const char *, uint64_t);

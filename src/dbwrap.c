@@ -190,6 +190,7 @@ dbwrap_pool_get_connection(dbwrap_pool_t *pool)
 	}
 
 	i = 0;
+	ctx = NULL;
 	LIST_FOREACH_SAFE(ctx, &(pool->dp_conns), dc_entry, tctx) {
 		if (++i == (pool->dp_lastconn % pool->dp_nconns)) {
 			break;
