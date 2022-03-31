@@ -41,6 +41,14 @@ dbwrap_ctx_new(dbwrap_dbtype_t dbtype, uint64_t flags)
 {
 	dbwrap_ctx_t *ctx;
 
+	switch (dbtype) {
+	case DBWRAP_MYSQL:
+	case DBWRAP_SQLITE:
+		break;
+	default:
+		return (NULL);
+	}
+
 	ctx = calloc(1, sizeof(*ctx));
 	if (ctx == NULL) {
 		return (ctx);
