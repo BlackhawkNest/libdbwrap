@@ -178,6 +178,7 @@ long dbwrap_column_to_long(dbwrap_column_t *, long);
 unsigned long dbwrap_column_to_ulong(dbwrap_column_t *, unsigned long);
 char *dbwrap_column_to_string(dbwrap_column_t *);
 void *dbwrap_column_value(dbwrap_column_t *);
+size_t dbwrap_column_size(dbwrap_column_t *);
 
 #ifdef __cplusplus
 }

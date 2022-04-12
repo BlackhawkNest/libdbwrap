@@ -827,6 +827,17 @@ dbwrap_column_value(dbwrap_column_t *column)
 	return (column->dc_value);
 }
 
+size_t
+dbwrap_column_size(dbwrap_column_t *column)
+{
+
+	if (column == NULL) {
+		return (0);
+	}
+
+	return (column->dc_size);
+}
+
 void
 dbwrap_query_free(dbwrap_query_t **queryp)
 {
