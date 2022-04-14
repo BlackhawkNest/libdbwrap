@@ -41,17 +41,20 @@
 
 #define DBWRAP_MYSQL_CTX_INTERNAL_FLAG_MTX_INITTED	0x1
 
+struct _dbwrap_ctx;
+
 typedef struct _dbwrap_mysql_ctx {
-	uint64_t	 bmc_version;
-	uint64_t	 bmc_flags;
-	uint64_t	 bmc_internal_flags;
-	MYSQL		*bmc_mysql;
-	pthread_mutex_t	 bmc_mtx;
-	char		*bmc_host;
-	char		*bmc_password;
-	char		*bmc_username;
-	char		*bmc_database;
-	unsigned int	 bmc_port;
+	uint64_t		 bmc_version;
+	uint64_t		 bmc_flags;
+	uint64_t		 bmc_internal_flags;
+	MYSQL			*bmc_mysql;
+	pthread_mutex_t		 bmc_mtx;
+	char			*bmc_host;
+	char			*bmc_password;
+	char			*bmc_username;
+	char			*bmc_database;
+	unsigned int		 bmc_port;
+	struct _dbwrap_ctx	*bmc_dbctx;
 } dbwrap_mysql_ctx_t;
 
 typedef struct _dbwrap_mysql_statement_bind {
@@ -93,8 +96,8 @@ bool dbwrap_mysql_thread_cleanup(void);
 /*
  * flags, host, username, password, database, port
  */
-dbwrap_mysql_ctx_t *dbwrap_mysql_ctx_init(uint64_t, const char *,
-    const char *, const char *, const char *, unsigned int);
+dbwrap_mysql_ctx_t *dbwrap_mysql_ctx_init(struct _dbwrap_ctx *, uint64_t,
+    const char *, const char *, const char *, const char *, unsigned int);
 void dbwrap_mysql_ctx_destroy(dbwrap_mysql_ctx_t **);
 bool dbwrap_mysql_ctx_lock(dbwrap_mysql_ctx_t *);
 void dbwrap_mysql_ctx_unlock(dbwrap_mysql_ctx_t *);

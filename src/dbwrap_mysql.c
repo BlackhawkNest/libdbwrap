@@ -29,7 +29,7 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "dbwrap_mysql.h"
+#include "dbwrap.h"
 
 bool
 dbwrap_mysql_init(void)
@@ -62,7 +62,7 @@ dbwrap_mysql_thread_cleanup(void)
 }
 
 dbwrap_mysql_ctx_t *
-dbwrap_mysql_ctx_init(uint64_t flags, const char *host,
+dbwrap_mysql_ctx_init(dbwrap_ctx_t *dbctx, uint64_t flags, const char *host,
     const char *username, const char *password, const char *database,
     unsigned int port)
 {
@@ -126,6 +126,7 @@ dbwrap_mysql_ctx_init(uint64_t flags, const char *host,
 	ctx->bmc_port = port;
 	ctx->bmc_flags = flags;
 	ctx->bmc_version = DBWRAP_MYSQL_VERSION;
+	ctx->bmc_dbctx = dbctx;
 
 	return (ctx);
 }
@@ -196,16 +197,22 @@ dbwrap_mysql_connect(dbwrap_mysql_ctx_t *ctx)
 	bool set;
 
 	if (ctx == NULL || ctx->bmc_mysql == NULL) {
+		fprintf(stderr, "[-] ctx: %p\n", ctx);
+		if (ctx != NULL) {
+			fprintf(stderr, "    bmc_mysql: %p\n", ctx->bmc_mysql);
+		}
 		return (false);
 	}
 
 	set = true;
 	if (mysql_options(ctx->bmc_mysql, MYSQL_OPT_RECONNECT, &set)) {
+		fprintf(stderr, "[-] mysql_options(MYSQL_OPT_RECONNECT) failed\n");
 		return (false);
 	}
 
 	set = false;
 	if (mysql_options(ctx->bmc_mysql, MYSQL_REPORT_DATA_TRUNCATION, &set)) {
+		fprintf(stderr, "[-] mysql_options(MYSQL_REPORT_DATA_TRUNCATION,) failed\n");
 		return (false);
 	}
 
@@ -226,6 +233,7 @@ dbwrap_mysql_connect(dbwrap_mysql_ctx_t *ctx)
 		if (!mysql_real_connect(ctx->bmc_mysql, ctx->bmc_host,
 		    ctx->bmc_username, ctx->bmc_password, ctx->bmc_database,
 		    ctx->bmc_port, NULL, flags)) {
+			fprintf(stderr, "[-] mysql_real_connect failed\n");
 			return (false);
 		}
 	}

@@ -29,10 +29,10 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "dbwrap_sqlite.h"
+#include "dbwrap.h"
 
 dbwrap_sqlite_ctx_t *
-dbwrap_sqlite_ctx_new(const char *path, uint64_t flags)
+dbwrap_sqlite_ctx_new(dbwrap_ctx_t *dbctx, const char *path, uint64_t flags)
 {
 	dbwrap_sqlite_ctx_t *ctx;
 
@@ -66,6 +66,7 @@ dbwrap_sqlite_ctx_new(const char *path, uint64_t flags)
 	}
 
 	ctx->dsc_internal_flags |= DBWRAP_SQLITE_INTERNAL_INIT;
+	ctx->dsc_dbctx = dbctx;
 
 	return (ctx);
 }

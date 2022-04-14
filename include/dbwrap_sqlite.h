@@ -38,6 +38,8 @@
 #define DBWRAP_SQLITE_VERSION	0
 #define DBWRAP_SQLITE_INTERNAL_INIT	1
 
+struct _dbwrap_ctx;
+
 typedef enum _dbwrap_sqlite_column_type {
 	DBWRAP_SQLITE_COLUMN_UNKNOWN = 0,
 	DBWRAP_SQLITE_COLUMN_TEXT = 1,
@@ -49,12 +51,13 @@ typedef enum _dbwrap_sqlite_column_type {
 } dbwrap_sqlite_column_type_t;
 
 typedef struct _dbwrap_sqlite_ctx {
-	uint64_t	 dsc_version;
-	uint64_t	 dsc_flags;
-	uint64_t	 dsc_internal_flags;
-	char		*dsc_path;
-	pthread_mutex_t	 dsc_mtx;
-	sqlite3		*dsc_ctx;
+	uint64_t		 dsc_version;
+	uint64_t		 dsc_flags;
+	uint64_t		 dsc_internal_flags;
+	char			*dsc_path;
+	pthread_mutex_t		 dsc_mtx;
+	sqlite3			*dsc_ctx;
+	struct _dbwrap_ctx	*dsc_dbctx;
 } dbwrap_sqlite_ctx_t;
 
 typedef struct _dbwrap_sqlite_column {
@@ -83,7 +86,8 @@ typedef struct _dbwrap_sqlite_query {
 extern "C" {
 #endif
 
-dbwrap_sqlite_ctx_t *dbwrap_sqlite_ctx_new(const char *, uint64_t);
+dbwrap_sqlite_ctx_t *dbwrap_sqlite_ctx_new(struct _dbwrap_ctx *, const char *,
+    uint64_t);
 void dbwrap_sqlite_ctx_free(dbwrap_sqlite_ctx_t **);
 
 dbwrap_sqlite_query_t *dbwrap_sqlite_query_new(dbwrap_sqlite_ctx_t *,

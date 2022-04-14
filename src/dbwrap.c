@@ -219,7 +219,7 @@ dbwrap_ctx_sqlite_configure(dbwrap_ctx_t *ctx, const char *path,
 		return (false);
 	}
 
-	ctx->dc_dbctx.dc_sqlite = dbwrap_sqlite_ctx_new(path, flags);
+	ctx->dc_dbctx.dc_sqlite = dbwrap_sqlite_ctx_new(ctx, path, flags);
 
 	return (ctx->dc_dbctx.dc_sqlite != NULL);
 }
@@ -234,8 +234,8 @@ dbwrap_ctx_mysql_configure(dbwrap_ctx_t *ctx, const char *host,
 		return (false);
 	}
 
-	ctx->dc_dbctx.dc_mysql = dbwrap_mysql_ctx_init(flags, host, username,
-	    password, database, port);
+	ctx->dc_dbctx.dc_mysql = dbwrap_mysql_ctx_init(ctx, flags, host,
+	    username, password, database, port);
 
 	if (ctx->dc_dbctx.dc_mysql == NULL) {
 		return (false);
@@ -641,6 +641,7 @@ dbwrap_query_exec(dbwrap_query_t *query)
 {
 
 	if (query == NULL) {
+		fprintf(stderr, "[-] query cannot be null\n");
 		return (false);
 	}
 
