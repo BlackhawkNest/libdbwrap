@@ -39,6 +39,7 @@
 #define DBWRAP_SQLITE_INTERNAL_INIT	1
 
 struct _dbwrap_ctx;
+struct _dbwrap_query;
 
 typedef enum _dbwrap_sqlite_column_type {
 	DBWRAP_SQLITE_COLUMN_UNKNOWN = 0,
@@ -79,6 +80,7 @@ typedef struct _dbwrap_sqlite_query {
 	dbwrap_sqlite_ctx_t		*dsq_ctx;
 	sqlite3_stmt			*dsq_stmt;
 	size_t				 dsq_ncolumns;
+	struct _dbwrap_query		*dsc_dbquery;
 	LIST_HEAD(,_dbwrap_sqlite_row)	 dsq_rows;
 } dbwrap_sqlite_query_t;
 

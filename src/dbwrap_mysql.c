@@ -242,8 +242,8 @@ dbwrap_mysql_connect(dbwrap_mysql_ctx_t *ctx)
 }
 
 dbwrap_mysql_statement_t *
-dbwrap_mysql_statement_init(dbwrap_mysql_ctx_t *ctx, const char *query,
-    uint64_t flags)
+dbwrap_mysql_statement_init(dbwrap_query_t *dbquery, dbwrap_mysql_ctx_t *ctx,
+    const char *query, uint64_t flags)
 {
 	dbwrap_mysql_statement_t *stmt;
 
@@ -271,6 +271,7 @@ dbwrap_mysql_statement_init(dbwrap_mysql_ctx_t *ctx, const char *query,
 
 	stmt->bms_ctx = ctx;
 	stmt->bms_flags = flags;
+	stmt->bms_dbquery = dbquery;
 	LIST_INIT(&(stmt->bms_binds));
 
 	return (stmt);
@@ -318,6 +319,8 @@ dbwrap_mysql_statement_bind(dbwrap_mysql_statement_t *stmt, MYSQL_BIND *val)
 
 	bval = calloc(1, sizeof(*bval));
 	if (bval == NULL) {
+		dbwrap_query_set_errorcode(stmt->bms_dbquery,
+		    DBWRAP_ERROR_ALLOC);
 		return (false);
 	}
 
@@ -357,11 +360,15 @@ dbwrap_mysql_statement_exec(dbwrap_mysql_statement_t *stmt)
 
 	if (mysql_stmt_prepare(stmt->bms_statement, stmt->bms_query,
 	    strlen(stmt->bms_query))) {
+		dbwrap_query_set_errorcode(stmt->bms_dbquery,
+		    DBWRAP_ERROR_BACKEND);
 		res = false;
 		goto end;
 	}
 
 	if (mysql_stmt_param_count(stmt->bms_statement) != stmt->bms_nbinds) {
+		dbwrap_query_set_errorcode(stmt->bms_dbquery,
+		    DBWRAP_ERROR_BACKEND);
 		res = false;
 		goto end;
 	}
@@ -385,6 +392,8 @@ dbwrap_mysql_statement_exec(dbwrap_mysql_statement_t *stmt)
 	}
 
 	if (msbind && mysql_stmt_bind_param(stmt->bms_statement, msbind)) {
+		dbwrap_query_set_errorcode(stmt->bms_dbquery,
+		    DBWRAP_ERROR_BACKEND);
 		res = false;
 		goto end;
 	}
@@ -397,11 +406,15 @@ dbwrap_mysql_statement_exec(dbwrap_mysql_statement_t *stmt)
 	locked = true;
 
 	if (mysql_stmt_execute(stmt->bms_statement)) {
+		dbwrap_query_set_errorcode(stmt->bms_dbquery,
+		    DBWRAP_ERROR_BACKEND);
 		res = false;
 		goto end;
 	}
 
 	if (mysql_stmt_store_result(stmt->bms_statement)) {
+		dbwrap_query_set_errorcode(stmt->bms_dbquery,
+		    DBWRAP_ERROR_BACKEND);
 		res = false;
 		goto end;
 	}
@@ -510,6 +523,8 @@ dbwrap_mysql_fetch_results(dbwrap_mysql_statement_t *stmt)
 
 		if (!mysql_stmt_bind_result(stmt->bms_statement,
 		    row->bmsb_columns) && mysql_stmt_errno(stmt->bms_statement)) {
+			dbwrap_query_set_errorcode(stmt->bms_dbquery,
+			    DBWRAP_ERROR_BACKEND);
 			free(row->bmsb_colsizes);
 			free(row);
 			return (res);

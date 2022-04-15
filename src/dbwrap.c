@@ -263,7 +263,7 @@ dbwrap_query_new(dbwrap_ctx_t *ctx, const char *querystr, uint64_t flags)
 	switch (ctx->dc_dbtype) {
 	case DBWRAP_MYSQL:
 		query->dq_qobj.dq_mysql = dbwrap_mysql_statement_init(
-		    ctx->dc_dbctx.dc_mysql, querystr, flags);
+		    query, ctx->dc_dbctx.dc_mysql, querystr, flags);
 		break;
 	case DBWRAP_SQLITE:
 		query->dq_qobj.dq_sqlite = dbwrap_sqlite_query_new(
@@ -348,6 +348,10 @@ dbwrap_query_set_errorcode(dbwrap_query_t *query, dbwrap_errorcode_t code)
 
 	if (query == NULL) {
 		return;
+	}
+
+	if (code != DBWRAP_ERROR_NONE) {
+		dbwrap_query_set_flag(query, DBWRAP_QUERY_ERROR);
 	}
 
 	query->dq_errorcode = code;

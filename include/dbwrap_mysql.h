@@ -42,6 +42,7 @@
 #define DBWRAP_MYSQL_CTX_INTERNAL_FLAG_MTX_INITTED	0x1
 
 struct _dbwrap_ctx;
+struct _dbwrap_query;
 
 typedef struct _dbwrap_mysql_ctx {
 	uint64_t		 bmc_version;
@@ -70,6 +71,7 @@ typedef struct _dbwrap_mysql_statement {
 	MYSQL_RES					*bms_res;
 	size_t						 bms_nbinds;
 	dbwrap_mysql_statement_bind_t			*bms_last;
+	struct _dbwrap_query				*bms_dbquery;
 	LIST_HEAD(,_dbwrap_mysql_statement_bind)	 bms_binds;
 } dbwrap_mysql_statement_t;
 
@@ -105,7 +107,7 @@ void dbwrap_mysql_ctx_unlock(dbwrap_mysql_ctx_t *);
 bool dbwrap_mysql_connect(dbwrap_mysql_ctx_t *);
 
 dbwrap_mysql_statement_t *dbwrap_mysql_statement_init(
-    dbwrap_mysql_ctx_t *, const char *, uint64_t);
+    struct _dbwrap_query *, dbwrap_mysql_ctx_t *, const char *, uint64_t);
 void dbwrap_mysql_statement_destroy(dbwrap_mysql_statement_t **);
 bool dbwrap_mysql_statement_bind(dbwrap_mysql_statement_t *,
     MYSQL_BIND *);
