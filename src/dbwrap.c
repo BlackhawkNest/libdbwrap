@@ -911,7 +911,7 @@ dbwrap_column_free(dbwrap_column_t **columnp)
 
 	column = *columnp;
 
-	if (column->dc_value != NULL) {
+	if (column->dc_value != NULL && column->dc_size > 0) {
 		explicit_bzero(column->dc_value, column->dc_size);
 		free(column->dc_value);
 	}

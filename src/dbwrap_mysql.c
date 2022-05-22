@@ -493,12 +493,14 @@ dbwrap_mysql_fetch_results(dbwrap_mysql_statement_t *stmt)
 	for (j = 0; ; j++) {
 		row = calloc(1, sizeof(*row));
 		if (row == NULL) {
+			res->bmsr_ncols = 0;
 			return (res);
 		}
 
 		if (res->bmsr_ncols * sizeof(*(row->bmsb_columns)) <
 		    sizeof(*(row->bmsb_columns))) {
 			free(row);
+			res->bmsr_ncols = 0;
 			return (res);
 		}
 
@@ -506,6 +508,7 @@ dbwrap_mysql_fetch_results(dbwrap_mysql_statement_t *stmt)
 		    sizeof(*(row->bmsb_colsizes)));
 		if (row->bmsb_colsizes == NULL) {
 			free(row);
+			res->bmsr_ncols = 0;
 			return (res);
 		}
 
@@ -514,6 +517,7 @@ dbwrap_mysql_fetch_results(dbwrap_mysql_statement_t *stmt)
 		if (row->bmsb_columns == NULL) {
 			free(row->bmsb_colsizes);
 			free(row);
+			res->bmsr_ncols = 0;
 			return (res);
 		}
 
@@ -527,6 +531,7 @@ dbwrap_mysql_fetch_results(dbwrap_mysql_statement_t *stmt)
 			    DBWRAP_ERROR_BACKEND);
 			free(row->bmsb_colsizes);
 			free(row);
+			res->bmsr_ncols = 0;
 			return (res);
 		}
 
@@ -534,18 +539,21 @@ dbwrap_mysql_fetch_results(dbwrap_mysql_statement_t *stmt)
 		if (status == 1) {
 			free(row->bmsb_colsizes);
 			free(row);
+			res->bmsr_ncols = 0;
 			return (res);
 		}
 
 		if (status == MYSQL_NO_DATA) {
 			free(row->bmsb_colsizes);
 			free(row);
-			break;
+			res->bmsr_ncols = 0;
+			return (res);
 		}
 
 		if (status == MYSQL_DATA_TRUNCATED) {
 			free(row->bmsb_colsizes);
 			free(row);
+			res->bmsr_ncols = 0;
 			break;
 		}
 
@@ -568,6 +576,7 @@ dbwrap_mysql_fetch_results(dbwrap_mysql_statement_t *stmt)
 		if (i < res->bmsr_ncols) {
 			free(row->bmsb_colsizes);
 			free(row);
+			res->bmsr_ncols = 0;
 			return (res);
 		}
 
