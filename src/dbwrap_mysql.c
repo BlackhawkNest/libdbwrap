@@ -493,14 +493,14 @@ dbwrap_mysql_fetch_results(dbwrap_mysql_statement_t *stmt)
 	for (j = 0; ; j++) {
 		row = calloc(1, sizeof(*row));
 		if (row == NULL) {
-			res->bmsr_ncols = 0;
+			dbwrap_mysql_statement_result_free(&res);
 			return (res);
 		}
 
 		if (res->bmsr_ncols * sizeof(*(row->bmsb_columns)) <
 		    sizeof(*(row->bmsb_columns))) {
 			free(row);
-			res->bmsr_ncols = 0;
+			dbwrap_mysql_statement_result_free(&res);
 			return (res);
 		}
 
@@ -508,7 +508,7 @@ dbwrap_mysql_fetch_results(dbwrap_mysql_statement_t *stmt)
 		    sizeof(*(row->bmsb_colsizes)));
 		if (row->bmsb_colsizes == NULL) {
 			free(row);
-			res->bmsr_ncols = 0;
+			dbwrap_mysql_statement_result_free(&res);
 			return (res);
 		}
 
@@ -517,7 +517,7 @@ dbwrap_mysql_fetch_results(dbwrap_mysql_statement_t *stmt)
 		if (row->bmsb_columns == NULL) {
 			free(row->bmsb_colsizes);
 			free(row);
-			res->bmsr_ncols = 0;
+			dbwrap_mysql_statement_result_free(&res);
 			return (res);
 		}
 
@@ -525,43 +525,56 @@ dbwrap_mysql_fetch_results(dbwrap_mysql_statement_t *stmt)
 			row->bmsb_columns[i].length = row->bmsb_colsizes + i;
 		}
 
-		if (!mysql_stmt_bind_result(stmt->bms_statement,
-		    row->bmsb_columns) && mysql_stmt_errno(stmt->bms_statement)) {
+		status = mysql_stmt_bind_result(stmt->bms_statement,
+		    row->bmsb_columns);
+		if (status != 0 || mysql_stmt_errno(stmt->bms_statement)) {
+			printf("mysql_stmt_bind_result failed: %s\n", mysql_stmt_error(stmt->bms_statement));
 			dbwrap_query_set_errorcode(stmt->bms_dbquery,
 			    DBWRAP_ERROR_BACKEND);
 			free(row->bmsb_colsizes);
 			free(row);
-			res->bmsr_ncols = 0;
+			dbwrap_mysql_statement_result_free(&res);
 			return (res);
 		}
 
 		status = mysql_stmt_fetch(stmt->bms_statement);
 		if (status == 1) {
+			fprintf(stderr, "[-] mysql_stmt_fetch failed\n");
 			free(row->bmsb_colsizes);
 			free(row);
-			res->bmsr_ncols = 0;
+			dbwrap_mysql_statement_result_free(&res);
 			return (res);
 		}
 
 		if (status == MYSQL_NO_DATA) {
 			free(row->bmsb_colsizes);
 			free(row);
-			res->bmsr_ncols = 0;
-			return (res);
+			break;
 		}
 
 		if (status == MYSQL_DATA_TRUNCATED) {
+			fprintf(stderr, "[-] Truncated data\n");
 			free(row->bmsb_colsizes);
 			free(row);
-			res->bmsr_ncols = 0;
+			dbwrap_mysql_statement_result_free(&res);
 			break;
+		}
+
+		if (mysql_stmt_errno(stmt->bms_statement)) {
+			fprintf(stderr, "[-] mysql_stmt_errno returned value: %d (%s)\n",
+			    mysql_stmt_errno(stmt->bms_statement), mysql_stmt_error(stmt->bms_statement));
+			free(row->bmsb_colsizes);
+			free(row);
+			dbwrap_mysql_statement_result_free(&res);
+			return (res);
 		}
 
 		for (i = 0; i < res->bmsr_ncols; i++) {
 			row->bmsb_columns[i].buffer = calloc(1,
 			    row->bmsb_colsizes[i]+1);
 			if (row->bmsb_columns[i].buffer == NULL) {
-				break;
+				dbwrap_mysql_statement_result_free(&res);
+				return (NULL);
 			}
 
 			row->bmsb_columns[i].buffer_length = row->bmsb_colsizes[i];
@@ -569,15 +582,16 @@ dbwrap_mysql_fetch_results(dbwrap_mysql_statement_t *stmt)
 			if (mysql_stmt_fetch_column(stmt->bms_statement,
 			    row->bmsb_columns + i, i, 0)) {
 				free(row->bmsb_columns[i].buffer);
-				break;
+				dbwrap_mysql_statement_result_free(&res);
+				return (NULL);
 			}
 		}
 
 		if (i < res->bmsr_ncols) {
 			free(row->bmsb_colsizes);
 			free(row);
-			res->bmsr_ncols = 0;
-			return (res);
+			dbwrap_mysql_statement_result_free(&res);
+			break;
 		}
 
 		LIST_INSERT_HEAD(&(res->bmsr_rows), row, bmsb_entry);
@@ -604,6 +618,9 @@ dbwrap_mysql_statement_result_free(
 		LIST_REMOVE(row, bmsb_entry);
 		free(row->bmsb_colsizes);
 		for (i = 0; i < res->bmsr_ncols; i++) {
+			if (row->bmsb_columns[i].buffer == NULL) {
+				continue;
+			}
 			explicit_bzero(row->bmsb_columns[i].buffer,
 			    row->bmsb_columns[i].buffer_length);
 			free(row->bmsb_columns[i].buffer);
