@@ -570,14 +570,26 @@ dbwrap_mysql_fetch_results(dbwrap_mysql_statement_t *stmt)
 		}
 
 		for (i = 0; i < res->bmsr_ncols; i++) {
-			row->bmsb_columns[i].buffer = calloc(1,
-			    row->bmsb_colsizes[i]+1);
+			sz = 0;
+			switch (stmt->bms_res->fields[i].type) {
+			case MYSQL_TYPE_LONG:
+				sz = row->bmsb_colsizes[i] *
+				    sizeof(int);
+				break;
+			case MYSQL_TYPE_LONGLONG:
+				sz = row->bmsb_colsizes[i] *
+				    sizeof(long long int);
+				break;
+			default:
+				sz = row->bmsb_colsizes[i];
+			}
+			row->bmsb_columns[i].buffer = calloc(1, sz+1);
 			if (row->bmsb_columns[i].buffer == NULL) {
 				dbwrap_mysql_statement_result_free(&res);
 				return (NULL);
 			}
 
-			row->bmsb_columns[i].buffer_length = row->bmsb_colsizes[i];
+			row->bmsb_columns[i].buffer_length = sz;
 			row->bmsb_columns[i].buffer_type = stmt->bms_res->fields[i].type;
 			if (mysql_stmt_fetch_column(stmt->bms_statement,
 			    row->bmsb_columns + i, i, 0)) {
