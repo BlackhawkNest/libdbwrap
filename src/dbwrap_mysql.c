@@ -303,6 +303,7 @@ dbwrap_mysql_statement_destroy(dbwrap_mysql_statement_t **stmtp)
 		mysql_stmt_close(stmt->bms_statement);
 	}
 
+	free(stmt->bms_query);
 	free(stmt);
 
 	*stmtp = NULL;
@@ -351,6 +352,10 @@ dbwrap_mysql_statement_exec(dbwrap_mysql_statement_t *stmt)
 	size_t i;
 
 	if (stmt == NULL) {
+		return (false);
+	}
+
+	if (stmt->bms_statement == NULL) {
 		return (false);
 	}
 
@@ -446,11 +451,16 @@ dbwrap_mysql_statement_free(dbwrap_mysql_statement_t **stmtp)
 		free(msbind);
 	}
 
+	if (stmt->bms_res != NULL) {
+		mysql_free_result(stmt->bms_res);
+	}
+
 	if (stmt->bms_statement != NULL) {
 		mysql_stmt_free_result(stmt->bms_statement);
 		mysql_stmt_close(stmt->bms_statement);
 	}
 
+	free(stmt->bms_query);
 	free(stmt);
 	*stmtp = NULL;
 }
