@@ -672,7 +672,8 @@ dbwrap_query_result_fetch(dbwrap_query_t *query)
 
 	switch (query->dq_ctx->dc_dbtype) {
 	case DBWRAP_MYSQL:
-		mresult = dbwrap_mysql_fetch_results(query->dq_qobj.dq_mysql);
+		mresult = dbwrap_mysql_fetch_results(query->dq_qobj.dq_mysql,
+		    query->dq_flags);
 		if (mresult == NULL) {
 			return (NULL);
 		}
@@ -904,6 +905,7 @@ void
 dbwrap_column_free(dbwrap_column_t **columnp)
 {
 	dbwrap_column_t *column;
+	uint64_t flags;
 
 	if (columnp == NULL || *columnp == NULL) {
 		return;
@@ -911,8 +913,18 @@ dbwrap_column_free(dbwrap_column_t **columnp)
 
 	column = *columnp;
 
+	flags = DBWRAP_QUERY_FLAG_ZERO_RESULTS;
+	if (column->dc_row != NULL) {
+		if (column->dc_row->dr_query != NULL) {
+			flags = column->dc_row->dr_query->dq_flags;
+		}
+	}
+
 	if (column->dc_value != NULL && column->dc_size > 0) {
-		explicit_bzero(column->dc_value, column->dc_size);
+		if ((flags & DBWRAP_QUERY_FLAG_ZERO_RESULTS) ==
+		    DBWRAP_QUERY_FLAG_ZERO_RESULTS) {
+			explicit_bzero(column->dc_value, column->dc_size);
+		}
 		free(column->dc_value);
 	}
 

@@ -466,7 +466,7 @@ dbwrap_mysql_statement_free(dbwrap_mysql_statement_t **stmtp)
 }
 
 dbwrap_mysql_statement_result_t *
-dbwrap_mysql_fetch_results(dbwrap_mysql_statement_t *stmt)
+dbwrap_mysql_fetch_results(dbwrap_mysql_statement_t *stmt, uint64_t flags)
 {
 	dbwrap_mysql_statement_result_t *res;
 	dbwrap_mysql_row_t *row;
@@ -484,6 +484,7 @@ dbwrap_mysql_fetch_results(dbwrap_mysql_statement_t *stmt)
 	}
 
 	res->bmsr_statement = stmt;
+	res->bmsr_flags = flags;
 	LIST_INIT(&(res->bmsr_rows));
 
 	if (stmt->bms_res == NULL) {
@@ -643,8 +644,11 @@ dbwrap_mysql_statement_result_free(
 			if (row->bmsb_columns[i].buffer == NULL) {
 				continue;
 			}
-			explicit_bzero(row->bmsb_columns[i].buffer,
-			    row->bmsb_columns[i].buffer_length);
+			if ((res->bmsr_flags & DBWRAP_QUERY_FLAG_ZERO_RESULTS) ==
+			    DBWRAP_QUERY_FLAG_ZERO_RESULTS) {
+				explicit_bzero(row->bmsb_columns[i].buffer,
+				    row->bmsb_columns[i].buffer_length);
+			}
 			free(row->bmsb_columns[i].buffer);
 		}
 		free(row->bmsb_columns);

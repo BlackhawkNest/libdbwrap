@@ -39,6 +39,8 @@
 
 #define DBWRAP_QUERY_ERROR	0x1
 
+#define DBWRAP_QUERY_FLAG_ZERO_RESULTS	0x1
+
 struct _dbwrap_pool;
 struct _dbwrap_row;
 struct _dbwrap_query;

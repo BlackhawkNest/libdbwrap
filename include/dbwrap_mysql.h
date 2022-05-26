@@ -82,6 +82,7 @@ typedef struct _dbwrap_mysql_row {
 } dbwrap_mysql_row_t;
 
 typedef struct _dbwrap_mysql_statement_result {
+	uint64_t				 bmsr_flags;
 	size_t					 bmsr_ncols;
 	dbwrap_mysql_statement_t		*bmsr_statement;
 	LIST_HEAD(,_dbwrap_mysql_row)		 bmsr_rows;
@@ -115,7 +116,7 @@ bool dbwrap_mysql_statement_exec(dbwrap_mysql_statement_t *);
 void dbwrap_mysql_statement_free(dbwrap_mysql_statement_t **);
 
 dbwrap_mysql_statement_result_t *dbwrap_mysql_fetch_results(
-    dbwrap_mysql_statement_t *);
+    dbwrap_mysql_statement_t *, uint64_t);
 void dbwrap_mysql_statement_result_free(
     dbwrap_mysql_statement_result_t **);
 
