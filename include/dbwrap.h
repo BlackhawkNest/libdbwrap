@@ -90,6 +90,7 @@ typedef enum _dbwrap_column_type {
 	DBWRAP_COLUMN_NULL = 4,
 	DBWRAP_COLUMN_DOUBLE = 5,
 	DBWRAP_COLUMN_BLOB = 6,
+	DBWRAP_COLUMN_STRING = 7,
 } dbwrap_column_type_t;
 
 typedef struct _dbwrap_column {

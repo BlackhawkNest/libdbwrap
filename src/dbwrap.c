@@ -645,7 +645,6 @@ dbwrap_query_exec(dbwrap_query_t *query)
 {
 
 	if (query == NULL) {
-		fprintf(stderr, "[-] query cannot be null\n");
 		return (false);
 	}
 
@@ -814,6 +813,7 @@ dbwrap_column_to_string(dbwrap_column_t *column)
 	}
 
 	switch (column->dc_type) {
+	case DBWRAP_COLUMN_STRING:
 	case DBWRAP_COLUMN_TEXT:
 	case DBWRAP_COLUMN_BLOB:
 		return ((char *)(column->dc_value));
@@ -1034,6 +1034,25 @@ _dbwrap_convert_mysql_result(dbwrap_query_t *query,
 				break;
 			case MYSQL_TYPE_BLOB:
 				column->dc_type = DBWRAP_COLUMN_BLOB;
+				column->dc_size = mrow->bmsb_colsizes[i];
+				column->dc_value = calloc(1, column->dc_size+1);
+				if (column->dc_value == NULL) {
+					dbwrap_query_set_flag(query,
+					    DBWRAP_QUERY_ERROR);
+					dbwrap_query_set_errorcode(query,
+					    DBWRAP_ERROR_ALLOC);
+					dbwrap_row_free(&row);
+					free(column);
+					goto end;
+				}
+				memmove(column->dc_value,
+				    mrow->bmsb_columns[i].buffer,
+				    column->dc_size);
+				break;
+			case MYSQL_TYPE_VAR_STRING:
+				/* FALLTHROUGH */
+			case MYSQL_TYPE_STRING:
+				column->dc_type = DBWRAP_COLUMN_STRING;
 				column->dc_size = mrow->bmsb_colsizes[i];
 				column->dc_value = calloc(1, column->dc_size+1);
 				if (column->dc_value == NULL) {
