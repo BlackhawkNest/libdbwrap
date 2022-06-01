@@ -277,38 +277,6 @@ dbwrap_mysql_statement_init(dbwrap_query_t *dbquery, dbwrap_mysql_ctx_t *ctx,
 	return (stmt);
 }
 
-void
-dbwrap_mysql_statement_destroy(dbwrap_mysql_statement_t **stmtp)
-{
-	dbwrap_mysql_statement_bind_t *msbind, *tmsbind;
-	dbwrap_mysql_statement_t *stmt;
-
-	if (stmtp == NULL || *stmtp == NULL) {
-		return;
-	}
-
-	stmt = *stmtp;
-	LIST_FOREACH_SAFE(msbind, &(stmt->bms_binds), bmsb_entry, tmsbind) {
-		LIST_REMOVE(msbind, bmsb_entry);
-		/*
-		 * We want to explicitly zero the bound data in case
-		 * there is sensitive information contained within it.
-		 * For example, if we are binding a password.
-		 */
-		explicit_bzero(msbind, sizeof(*msbind));
-		free(msbind);
-	}
-
-	if (stmt->bms_statement != NULL) {
-		mysql_stmt_close(stmt->bms_statement);
-	}
-
-	free(stmt->bms_query);
-	free(stmt);
-
-	*stmtp = NULL;
-}
-
 bool
 dbwrap_mysql_statement_bind(dbwrap_mysql_statement_t *stmt, MYSQL_BIND *val)
 {
@@ -471,8 +439,8 @@ dbwrap_mysql_fetch_results(dbwrap_mysql_statement_t *stmt, uint64_t flags)
 	dbwrap_mysql_statement_result_t *res;
 	dbwrap_mysql_row_t *row;
 	unsigned long sz;
-	int status;
 	size_t i, j;
+	int status;
 
 	if (stmt == NULL) {
 		return (NULL);
@@ -560,6 +528,33 @@ dbwrap_mysql_fetch_results(dbwrap_mysql_statement_t *stmt, uint64_t flags)
 		if (status == MYSQL_NO_DATA) {
 			free(row->bmsb_colsizes);
 			free(row);
+			while (!mysql_stmt_next_result(stmt->bms_statement)) {
+				/* XXX (shawn.webb)
+				 *
+				 * HUGE FREAKING WARNING!
+				 *
+				 * Stored procedures can return multiple result
+				 * sets, each with a different number of
+				 * columns.
+				 *
+				 * The current design and implementation of
+				 * dbwrap does not support such a case. It is
+				 * assumed that only a single result set will be
+				 * returned.
+				 *
+				 * As such, in the case of a stored procedure
+				 * that returns multiple result sets, fake
+				 * fetching them to make the MySQL API happy.
+				 * Otherwise, subsequent queries will cause the
+				 * MySQL API to return CR_COMMANDS_OUT_OF_SYNC.
+				 *
+				 * Obviously, this needs to be fixed. We may
+				 * need an additional set of ABI and API
+				 * specific to queries that can return multiple
+				 * result sets, each with their own number of
+				 * rows and columns.
+				 */
+			}
 			break;
 		}
 
