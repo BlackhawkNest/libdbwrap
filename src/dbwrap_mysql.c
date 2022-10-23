@@ -197,22 +197,24 @@ dbwrap_mysql_connect(dbwrap_mysql_ctx_t *ctx)
 	bool set;
 
 	if (ctx == NULL || ctx->bmc_mysql == NULL) {
-		fprintf(stderr, "[-] ctx: %p\n", ctx);
-		if (ctx != NULL) {
-			fprintf(stderr, "    bmc_mysql: %p\n", ctx->bmc_mysql);
-		}
 		return (false);
 	}
 
 	set = true;
 	if (mysql_options(ctx->bmc_mysql, MYSQL_OPT_RECONNECT, &set)) {
-		fprintf(stderr, "[-] mysql_options(MYSQL_OPT_RECONNECT) failed\n");
+		ctx->bmc_dbctx->dc_logger->ll_log_err(
+		    ctx->bmc_dbctx->dc_logger, -1,
+		    "%s:%d mysql_options(MYSQL_OPT_RECONNECT) failed",
+		    __func__, __LINE__);
 		return (false);
 	}
 
 	set = false;
 	if (mysql_options(ctx->bmc_mysql, MYSQL_REPORT_DATA_TRUNCATION, &set)) {
-		fprintf(stderr, "[-] mysql_options(MYSQL_REPORT_DATA_TRUNCATION,) failed\n");
+		ctx->bmc_dbctx->dc_logger->ll_log_err(
+		    ctx->bmc_dbctx->dc_logger, -1,
+		    "%s:%d mysql_options(MYSQL_REPORT_DATA_TRUNCATION,) failed",
+		    __func__, __LINE__);
 		return (false);
 	}
 
@@ -233,7 +235,10 @@ dbwrap_mysql_connect(dbwrap_mysql_ctx_t *ctx)
 		if (!mysql_real_connect(ctx->bmc_mysql, ctx->bmc_host,
 		    ctx->bmc_username, ctx->bmc_password, ctx->bmc_database,
 		    ctx->bmc_port, NULL, flags)) {
-			fprintf(stderr, "[-] mysql_real_connect failed\n");
+			ctx->bmc_dbctx->dc_logger->ll_log_err(
+			    ctx->bmc_dbctx->dc_logger, -1,
+			    "%s:%d mysql_real_connect failed",
+			    __func__, __LINE__);
 			return (false);
 		}
 	}
@@ -264,6 +269,10 @@ dbwrap_mysql_statement_init(dbwrap_query_t *dbquery, dbwrap_mysql_ctx_t *ctx,
 
 	stmt->bms_statement = mysql_stmt_init(ctx->bmc_mysql);
 	if (stmt->bms_statement == NULL) {
+		ctx->bmc_dbctx->dc_logger->ll_log_err(
+		    ctx->bmc_dbctx->dc_logger, -1,
+		    "%s:%d mysql_stmt_init error",
+		    __func__, __LINE__);
 		free(stmt->bms_query);
 		free(stmt);
 		return (NULL);
@@ -333,6 +342,9 @@ dbwrap_mysql_statement_exec(dbwrap_mysql_statement_t *stmt)
 
 	if (mysql_stmt_prepare(stmt->bms_statement, stmt->bms_query,
 	    strlen(stmt->bms_query))) {
+		stmt->bms_ctx->bmc_dbctx->dc_logger->ll_log_err(
+		    stmt->bms_ctx->bmc_dbctx->dc_logger, -1,
+		    "%s:%d mysql_stmt_prepare", __func__, __LINE__);
 		dbwrap_query_set_errorcode(stmt->bms_dbquery,
 		    DBWRAP_ERROR_BACKEND);
 		res = false;
@@ -340,6 +352,9 @@ dbwrap_mysql_statement_exec(dbwrap_mysql_statement_t *stmt)
 	}
 
 	if (mysql_stmt_param_count(stmt->bms_statement) != stmt->bms_nbinds) {
+		stmt->bms_ctx->bmc_dbctx->dc_logger->ll_log_err(
+		    stmt->bms_ctx->bmc_dbctx->dc_logger, -1,
+		    "%s:%d mysql_stmt_param_count", __func__, __LINE__);
 		dbwrap_query_set_errorcode(stmt->bms_dbquery,
 		    DBWRAP_ERROR_BACKEND);
 		res = false;
@@ -365,6 +380,9 @@ dbwrap_mysql_statement_exec(dbwrap_mysql_statement_t *stmt)
 	}
 
 	if (msbind && mysql_stmt_bind_param(stmt->bms_statement, msbind)) {
+		stmt->bms_ctx->bmc_dbctx->dc_logger->ll_log_err(
+		    stmt->bms_ctx->bmc_dbctx->dc_logger, -1,
+		    "%s:%d mysql_stmt_bind_param", __func__, __LINE__);
 		dbwrap_query_set_errorcode(stmt->bms_dbquery,
 		    DBWRAP_ERROR_BACKEND);
 		res = false;
@@ -379,6 +397,9 @@ dbwrap_mysql_statement_exec(dbwrap_mysql_statement_t *stmt)
 	locked = true;
 
 	if (mysql_stmt_execute(stmt->bms_statement)) {
+		stmt->bms_ctx->bmc_dbctx->dc_logger->ll_log_err(
+		    stmt->bms_ctx->bmc_dbctx->dc_logger, -1,
+		    "%s:%d mysql_stmt_execute", __func__, __LINE__);
 		dbwrap_query_set_errorcode(stmt->bms_dbquery,
 		    DBWRAP_ERROR_BACKEND);
 		res = false;
@@ -386,6 +407,9 @@ dbwrap_mysql_statement_exec(dbwrap_mysql_statement_t *stmt)
 	}
 
 	if (mysql_stmt_store_result(stmt->bms_statement)) {
+		stmt->bms_ctx->bmc_dbctx->dc_logger->ll_log_err(
+		    stmt->bms_ctx->bmc_dbctx->dc_logger, -1,
+		    "%s:%d mysql_stmt_store_result", __func__, __LINE__);
 		dbwrap_query_set_errorcode(stmt->bms_dbquery,
 		    DBWRAP_ERROR_BACKEND);
 		res = false;
@@ -507,7 +531,11 @@ dbwrap_mysql_fetch_results(dbwrap_mysql_statement_t *stmt, uint64_t flags)
 		status = mysql_stmt_bind_result(stmt->bms_statement,
 		    row->bmsb_columns);
 		if (status != 0 || mysql_stmt_errno(stmt->bms_statement)) {
-			printf("mysql_stmt_bind_result failed: %s\n", mysql_stmt_error(stmt->bms_statement));
+			stmt->bms_ctx->bmc_dbctx->dc_logger->ll_log_err(
+			    stmt->bms_ctx->bmc_dbctx->dc_logger, -1,
+			    "%s:%d mysql_stmt_bind_result failed: %s",
+			    __func__, __LINE__,
+			    mysql_stmt_error(stmt->bms_statement));
 			dbwrap_query_set_errorcode(stmt->bms_dbquery,
 			    DBWRAP_ERROR_BACKEND);
 			free(row->bmsb_colsizes);
@@ -518,7 +546,10 @@ dbwrap_mysql_fetch_results(dbwrap_mysql_statement_t *stmt, uint64_t flags)
 
 		status = mysql_stmt_fetch(stmt->bms_statement);
 		if (status == 1) {
-			fprintf(stderr, "[-] mysql_stmt_fetch failed\n");
+			stmt->bms_ctx->bmc_dbctx->dc_logger->ll_log_err(
+			    stmt->bms_ctx->bmc_dbctx->dc_logger, -1,
+			    "%s:%d mysql_stmt_fetch failed",
+			    __func__, __LINE__);
 			free(row->bmsb_colsizes);
 			free(row);
 			dbwrap_mysql_statement_result_free(&res);
@@ -559,7 +590,9 @@ dbwrap_mysql_fetch_results(dbwrap_mysql_statement_t *stmt, uint64_t flags)
 		}
 
 		if (status == MYSQL_DATA_TRUNCATED) {
-			fprintf(stderr, "[-] Truncated data\n");
+			stmt->bms_ctx->bmc_dbctx->dc_logger->ll_log_err(
+			    stmt->bms_ctx->bmc_dbctx->dc_logger, -1,
+			    "%s:%d Truncated data", __func__, __LINE__);
 			free(row->bmsb_colsizes);
 			free(row);
 			dbwrap_mysql_statement_result_free(&res);
@@ -567,8 +600,12 @@ dbwrap_mysql_fetch_results(dbwrap_mysql_statement_t *stmt, uint64_t flags)
 		}
 
 		if (mysql_stmt_errno(stmt->bms_statement)) {
-			fprintf(stderr, "[-] mysql_stmt_errno returned value: %d (%s)\n",
-			    mysql_stmt_errno(stmt->bms_statement), mysql_stmt_error(stmt->bms_statement));
+			stmt->bms_ctx->bmc_dbctx->dc_logger->ll_log_err(
+			    stmt->bms_ctx->bmc_dbctx->dc_logger, -1,
+			    "%s:%d mysql_stmt_errno returned value: %d (%s)\n",
+			    __func__, __LINE__,
+			    mysql_stmt_errno(stmt->bms_statement),
+			    mysql_stmt_error(stmt->bms_statement));
 			free(row->bmsb_colsizes);
 			free(row);
 			dbwrap_mysql_statement_result_free(&res);

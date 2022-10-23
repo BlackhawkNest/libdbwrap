@@ -57,6 +57,10 @@ dbwrap_ctx_new(dbwrap_dbtype_t dbtype, uint64_t flags)
 	ctx->dc_flags = flags;
 	ctx->dc_dbtype = dbtype;
 	ctx->dc_version = DBWRAP_VERSION;
+	ctx->dc_logger = lattutil_log_init(NULL, -1, 0);
+	if (ctx->dc_logger == NULL) {
+		dbwrap_ctx_free(&ctx);
+	}
 
 	return (ctx);
 }
@@ -87,8 +91,24 @@ dbwrap_ctx_free(dbwrap_ctx_t **ctxp)
 		dbwrap_pool_remove_connection(ctx->dc_pool, ctx);
 	}
 
-	*ctxp = NULL;
+	lattutil_log_free(&(ctx->dc_logger));
+
 	free(ctx);
+	*ctxp = NULL;
+}
+
+bool
+dbwrap_ctx_set_logger(dbwrap_ctx_t *ctx, lattutil_log_t *logger)
+{
+
+	if (ctx == NULL || logger == NULL) {
+		return (false);
+	}
+
+	lattutil_log_free(&(ctx->dc_logger));
+	ctx->dc_logger = logger;
+
+	return (true);
 }
 
 dbwrap_pool_t *
@@ -950,7 +970,6 @@ dbwrap_result_free(dbwrap_result_t **resultp)
 		LIST_REMOVE(row, dr_entry);
 		dbwrap_row_free(&row);
 	}
-
 	memset(result, 0, sizeof(*result));
 
 	free(result);
@@ -974,6 +993,10 @@ _dbwrap_convert_mysql_result(dbwrap_query_t *query,
 	result = _dbwrap_result_new(query);
 	if (result == NULL) {
 		return (NULL);
+	}
+
+	if (mresult->bmsr_statement->bms_res == NULL) {
+		goto end;
 	}
 
 	LIST_FOREACH_SAFE(mrow, &(mresult->bmsr_rows), bmsb_entry, tmrow) {

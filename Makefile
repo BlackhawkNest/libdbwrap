@@ -20,6 +20,7 @@ CFLAGS+=	-I/usr/local/include
 LDFLAGS+=	-L/usr/local/lib
 LDFLAGS+=	-L/usr/local/lib/mysql
 
+LDADD+=		-llattutil
 LDADD+=		-lmysqlclient
 LDADD+=		-lsqlite3
 

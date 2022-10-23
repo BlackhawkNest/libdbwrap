@@ -27,6 +27,8 @@
 #ifndef _DBWRAP_H
 #define _DBWRAP_H
 
+#include <liblattutil.h>
+
 #ifdef _DBWRAP_INTERNAL
 #include "dbwrap_mysql.h"
 #include "dbwrap_sqlite.h"
@@ -42,8 +44,9 @@
 #define DBWRAP_QUERY_FLAG_ZERO_RESULTS	0x1
 
 struct _dbwrap_pool;
-struct _dbwrap_row;
 struct _dbwrap_query;
+struct _dbwrap_result;
+struct _dbwrap_row;
 
 typedef enum _dbwrap_dbtype {
 	DBWRAP_UNKNOWN = 0,
@@ -71,6 +74,7 @@ typedef struct _dbwrap_ctx {
 		dbwrap_mysql_ctx_t	*dc_mysql;
 	}				 dc_dbctx;
 	LIST_ENTRY(_dbwrap_ctx)		 dc_entry;
+	lattutil_log_t			*dc_logger;
 } dbwrap_ctx_t;
 
 typedef struct _dbwrap_pool {
@@ -133,6 +137,7 @@ extern "C" {
 
 dbwrap_ctx_t *dbwrap_ctx_new(dbwrap_dbtype_t, uint64_t);
 void dbwrap_ctx_free(dbwrap_ctx_t **);
+bool dbwrap_ctx_set_logger(dbwrap_ctx_t *, lattutil_log_t *);
 
 dbwrap_pool_t *dbwrap_pool_new(uint64_t);
 void dbwrap_pool_free(dbwrap_pool_t **, bool);
