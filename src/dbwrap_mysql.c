@@ -399,7 +399,8 @@ dbwrap_mysql_statement_exec(dbwrap_mysql_statement_t *stmt)
 	if (mysql_stmt_execute(stmt->bms_statement)) {
 		stmt->bms_ctx->bmc_dbctx->dc_logger->ll_log_err(
 		    stmt->bms_ctx->bmc_dbctx->dc_logger, -1,
-		    "%s:%d mysql_stmt_execute", __func__, __LINE__);
+		    "%s:%d mysql_stmt_execute: %s", __func__, __LINE__,
+		    mysql_stmt_error(stmt->bms_statement));
 		dbwrap_query_set_errorcode(stmt->bms_dbquery,
 		    DBWRAP_ERROR_BACKEND);
 		res = false;
